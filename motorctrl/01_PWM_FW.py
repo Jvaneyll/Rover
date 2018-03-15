@@ -1,37 +1,111 @@
-#Test basic PWM function with LED
-
 #init libraries
-print("initializing library and board")
+
 import RPi.GPIO as GPIO
-GPIO.setwarnings(False)
 import time
+GPIO.setwarnings(False)
+
 #init board
 GPIO.setmode(GPIO.BOARD)
-out1pin=int(12)
+R_PWM_pin=int(12)
+R_FW_pin=int(16)
+R_RV_pin=int(18)
+L_PWM_pin=int(33)
+L_FW_pin=int(15)
+L_RV_pin=int(37)
+
 #init I/O
-GPIO.setup(out1pin, GPIO.OUT)
-print("init completed")
 
-#Initialize variables
-freq=float(input("What PWM frequency to use (Hz) ?"))
+##classical OUT pins
+outpin = [R_PWM_pin,R_FW_pin,R_RV_pin,L_PWM_pin,L_FW_pin,L_RV_pin]
+GPIO.setup(outpin, GPIO.OUT)
 
-#Create a function to run the cycle
-def PWMLED(freq):
-	#create a PWM instance:
-	p = GPIO.PWM(out1pin, freq)
-	dc=0
-	#start PWM:
-	p.start(dc)
-	#change the duty cycle every 0.5sec to make the whole cycle
-	while dc<100:
-		dc=dc+10
-		p.ChangeDutyCycle(dc)  # where 0.0 <= dc <= 100.0
-		time.sleep(1)
-	#stop PWM:
-	p.stop()
+##classical IN pins
 
-#Run the command
-PWMLED(freq)
-GPIO.cleanup()
+#PWM pins
+##Initialize PWM frequency variable
+PWM_freq=int(10000)
+launch_time=int(0.3)
+
+##Set PWM pins
+r = GPIO.PWM(R_PWM_pin, PWM_freq)
+l = GPIO.PWM(L_PWM_pin, PWM_freq)
+
+# Safety checks
+## Motors in stopped mode
+GPIO.output(outpin, GPIO.LOW)
+r.stop()
+l.stop()
+
+#Create motor control function through H bridge
+## Sens de rotation du moteur
+STOP = 1
+FWD = 2
+REV = 3
+
+def Inactive():
+	""" Deactivate H bridge """
+	GPIO.output(R_PWM_pin, GPIO.LOW )
+	if(L_PWM_pin != R_PWM_pin):
+		GPIO.output(L_PWM_pin, GPIO.LOW )
+
+def RActive(Rdc):
+	""" Activate H bridge """
+	r = GPIO.PWM(R_PWM_pin, PWM_freq)
+	#Launch motor
+	dc=100
+	r.start(dc)
+	time.sleep(launch_time)
+	#change the duty cycle to desired one
+	Rdc=50
+	r.ChangeDutyCycle(Rdc)  # where 0.0 <= Rdc <= 100.0
+	time.sleep(10)
 	
+def LActive(Ldc):
+	l = GPIO.PWM(L_PWM_pin, PWM_freq)
+	#Launch motor
+	dc=100
+	l.start(dc)
+	time.sleep(launch_time)
+	#change the duty cycle to desired one
+	Ldc=50
+	l.ChangeDutyCycle(Ldc)
+	time.sleep(10)
 
+def RMotDir(rot):
+	""" Define rotation direction for right motor """
+	if(rot == FWD):
+		GPIO.output(R_FW_pin, GPIO.HIGH)
+		GPIO.output(R_RV_pin, GPIO.LOW)
+	elif(rot == REV):
+		GPIO.output(R_FW_pin, GPIO.LOW)
+		GPIO.output(R_RV_pin, GPIO.HIGH)
+	elif(rot == STOP):
+		GPIO.output(R_FW_pin, GPIO.LOW)
+		GPIO.output(R_RV_pin, GPIO.LOW)	
+
+def LMotDir(rot):
+	""" Define rotation direction for left motor """
+	if(rot == FWD):
+		GPIO.output(L_FW_pin, GPIO.HIGH)
+		GPIO.output(L_RV_pin, GPIO.LOW)
+	elif(rot == REV):
+		GPIO.output(L_FW_pin, GPIO.LOW)
+		GPIO.output(L_RV_pin, GPIO.HIGH)
+	elif(rot == STOP):
+		GPIO.output(L_FW_pin, GPIO.LOW)
+		GPIO.output(L_RV_pin, GPIO.LOW)
+		
+if __name__ == '__main__':
+	Inactive()
+	RMotDir(2)
+	RActive(50)
+	Inactive()
+	RMotDir(3)
+	RActive(50)
+	Inactive()
+	RMotDir(1)
+	RActive(50)
+	Inactive()
+	GPIO.cleanup()
+		
+		

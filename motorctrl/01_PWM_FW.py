@@ -13,13 +13,6 @@ R_PWM_pin=int(33)
 R_FW_pin=int(37)
 R_RV_pin=int(15)
 
-#R_PWM_pin=int(12)
-#R_FW_pin=int(16)
-#R_RV_pin=int(18)
-#L_PWM_pin=int(33)
-#L_FW_pin=int(15)
-#L_RV_pin=int(37)
-
 #init I/O
 
 ##classical OUT pins
@@ -54,30 +47,7 @@ def Inactive():
 	GPIO.output(R_PWM_pin, GPIO.LOW)
 	if(L_PWM_pin != R_PWM_pin):
 		GPIO.output(L_PWM_pin, GPIO.LOW)
-
-def RActive(Rdc):
-	""" Activate H bridge """
-	r = GPIO.PWM(R_PWM_pin, PWM_freq)
-	#Launch motor
-	dc=100
-	r.start(dc)
-	time.sleep(launch_time)
-	#change the duty cycle to desired one
-	#Rdc=50
-	r.ChangeDutyCycle(Rdc)  # where 0.0 <= Rdc <= 100.0
-	time.sleep(5)
-	
-def LActive(Ldc):
-	l = GPIO.PWM(L_PWM_pin, PWM_freq)
-	#Launch motor
-	dc=100
-	l.start(dc)
-	time.sleep(launch_time)
-	#change the duty cycle to desired one
-	#Ldc=50
-	l.ChangeDutyCycle(Ldc)
-	time.sleep(5)
-
+		
 def RMotDir(rot):
 	""" Define rotation direction for right motor """
 	if(rot == FWD):
@@ -101,32 +71,67 @@ def LMotDir(rot):
 	elif(rot == STOP):
 		GPIO.output(L_FW_pin, GPIO.LOW)
 		GPIO.output(L_RV_pin, GPIO.LOW)
+
+def RActive(Rdc):
+	""" Activate H bridge """
+	r = GPIO.PWM(R_PWM_pin, PWM_freq)
+	#Launch motor
+	sdc=100
+	r.start(sdc)
+	time.sleep(launch_time)
+	#change the duty cycle to desired one
+	#Rdc=50
+	r.ChangeDutyCycle(Rdc)  # where 0.0 <= Rdc <= 100.0
+	
+def LActive(Ldc):
+	l = GPIO.PWM(L_PWM_pin, PWM_freq)
+	#Launch motor
+	sdc=100
+	l.start(sdc)
+	time.sleep(launch_time)
+	#change the duty cycle to desired one
+	#Ldc=50
+	l.ChangeDutyCycle(Ldc)
+	
+def Active(dc):
+	""" Activation des pont-H """
+	r = GPIO.PWM(R_PWM_pin, PWM_freq)
+	l = GPIO.PWM(L_PWM_pin, PWM_freq)
+	#Launch motor
+	sdc=100
+	r.start(sdc)
+	l.start(sdc)
+	time.sleep(launch_time)
+	#change the duty cycle to desired one
+	r.ChangeDutyCycle(dc)
+	l.ChangeDutyCycle(dc)  # where 0.0 <= dc <= 100.0
+	time.sleep(5)
+
+def Forward(dc):
+	RMotDir(FWD)
+	LMotDir(FWD)
+	Active(dc)
+	
+def Reverse(dc):
+	RMotDir(REV)
+	LMotDir(REV)
+	Active(dc)
+	
+def Left(dc):
+	RMotDir(FWD)
+	LMotDir(REV)
+	Active(dc)
+
+def Right(dc):
+	RMotDir(REV)
+	LMotDir(FWD)
+	Active(dc)
 		
 if __name__ == '__main__':
 	Inactive()
-	RMotDir(2)
-	LMotDir(2)
-	RActive(50)
-	LActive(50)
-	Inactive()
-	RMotDir(3)
-	LMotDir(3)
-	RActive(50)
-	LActive(50)
-	RMotDir(1)
-	time.sleep(1)
-	LMotDir(1)
-	Inactive()
-	RMotDir(2)
-	LMotDir(3)
-	RActive(50)
-	LActive(50)
-	Inactive()
-	RMotDir(3)
-	LMotDir(2)
-	RActive(50)
-	LActive(50)
+	Forward(30)
+	Reverse(30)
+	Left(30)
+	Right(30)
 	Inactive()
 	GPIO.cleanup()
-		
-		

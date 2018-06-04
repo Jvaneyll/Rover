@@ -46,28 +46,33 @@ def US_distance():
 
 ### Test consists of 10x10 measures at different distances and angles in front of a wall
 ## Angles to test
-angles=[90]  #,75,60,45,30,20,10]
+angles=[90,75,60,45,30,20,10]
 ## Distances to test
-distances=[200] #,100,50,25,10,5]
+distances=[200,100,50,25,10,5]
 
 for k in xrange(len(angles)):
 	for l in xrange(len(distances)):
-		input(str(angles[k]) + " DEG - " + str(distances[l]) + " cm and press ENTER")
+		raw_input(str(angles[k]) + " DEG - " + str(distances[l]) + " cm and press ENTER")
+		
 		#Initialize variables
 		n=m=int(10)
-		res=list()
 		
 		# Run the function in a cycle
+		res=[]
 		for i in xrange(n):
-			raw=list()
+			raw=[]
 			for j in xrange(m):
 				a=US_distance()
 				raw.append(a)
-			res=res.append(raw)
+			res.append(raw)
+			
 		print(res)
-		ang=angles[k]*n*m
-		realdist=distances[l]*n*m
-		batch=xrange(n)*m
+		ang=np.tile(angles[k],n*m)
+		print(ang)
+		realdist=np.tile(distances[l],n*m)
+		print(realdist)
+		batch=np.repeat(range(1,m+1),n)
+		print(batch)
 
 # Reset GPIO settings
 GPIO.cleanup()

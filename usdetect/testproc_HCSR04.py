@@ -3,6 +3,7 @@
 import RPi.GPIO as GPIO
 import time
 import numpy as np
+import math
 GPIO.setwarnings(False)
 
 #init board
@@ -48,31 +49,33 @@ def US_distance():
 ## Angles to test
 angles=[90,75,60,45,30,20,10]
 ## Distances to test
-distances=[200,100,50,25,10,5]
+distances=[200,100,50,25,10]
+
+### Create file to record results
+f= open("test_results.txt","w+")
+headers=str("batch,angle,real_dist,meas_dist") + "\n"
+f.write(headers)
 
 for k in xrange(len(angles)):
 	for l in xrange(len(distances)):
-		raw_input(str(angles[k]) + " DEG - " + str(distances[l]) + " cm and press ENTER")
+		raw_input(str(angles[k]) + " DEG ("+  str(distances[l]*math.sin(math.radians(angles[k]))) + " cm from wall) - " + str(distances[l]) + " cm and press ENTER")
 		
 		#Initialize variables
 		n=m=int(10)
 		
 		# Run the function in a cycle
-		res=[]
 		for i in xrange(n):
-			raw=[]
 			for j in xrange(m):
-				a=US_distance()
-				raw.append(a)
-			res.append(raw)
-			
-		print(res)
-		ang=np.tile(angles[k],n*m)
-		print(ang)
-		realdist=np.tile(distances[l],n*m)
-		print(realdist)
-		batch=np.repeat(range(1,m+1),n)
-		print(batch)
+				batch=i+1
+				ang=angles[k]
+				realdist=distances[l]
+				measdist=US_distance()
+				toWrite=str(batch) + "," + str(ang) + "," + str(realdist) + "," + str(measdist) + "\n"
+				#print(toWrite)
+				f.write(toWrite)
+		
+f.close()
 
 # Reset GPIO settings
 GPIO.cleanup()
+
